@@ -1,0 +1,8 @@
+# Android Studio files
+.idea/
+app/build/
+build/
+local.properties
+
+# Arduino build files
+arduino-code/build/
