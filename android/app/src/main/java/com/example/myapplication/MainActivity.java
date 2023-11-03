@@ -3,11 +3,13 @@ package com.example.myapplication;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,16 +32,22 @@ public class MainActivity extends AppCompatActivity {
     private static final String DEVICE_ADDRESS = "00:21:09:00:09:D1"; // Replace with your HC-05 address
 
     private InputStream inputStream;
-    private TextView textView;
+    private TextView txtViewTemp;
+    private TextView txtViewPh;
+    private Button connectButton;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button connectButton = findViewById(R.id.connectButton);
-        textView = findViewById(R.id.textView);
+        connectButton = findViewById(R.id.connectButton);
+        txtViewTemp = findViewById(R.id.textView);
+        txtViewPh = findViewById(R.id.textView2);
 
         connectButton.setOnClickListener(view -> {
+            Log.d("BluetoothConnection", "WHAT THE HECK");
             try {
                 Log.d("BluetoothConnection", "Attempting to connect...");
 
@@ -72,19 +80,41 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button sendButton = findViewById(R.id.sendButton);
+//        Button sendButton = findViewById(R.id.sendButton);
+//
+//        sendButton.setOnClickListener(view -> {
+//            if (outputStream != null) {
+//                try {
+//                    outputStream.write("1".getBytes()); // Send "1" to Arduino
+//                    Log.d("BluetoothSend", "Sent: 1"); // Log the sent message
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    Log.d("BluetoothSend", "Error while sending: " + e.getMessage());
+//                }
+//            }
+//        });
 
-        sendButton.setOnClickListener(view -> {
-            if (outputStream != null) {
-                try {
-                    outputStream.write("1".getBytes()); // Send "1" to Arduino
-                    Log.d("BluetoothSend", "Sent: 1"); // Log the sent message
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Log.d("BluetoothSend", "Error while sending: " + e.getMessage());
-                }
+
+        LinearLayout taengernest = (LinearLayout) findViewById(R.id.phValueContainer);
+        LinearLayout mixnmatchernest = (LinearLayout) findViewById(R.id.temperatureContainer);
+        taengernest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent myIntent = new Intent(MainActivity.this, PhValueActivity.class);
+//                myIntent.putExtra("key", value); //Optional parameters
+                MainActivity.this.startActivity(myIntent);
             }
         });
+
+        mixnmatchernest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent myIntent = new Intent(MainActivity.this, TemperatureActivity.class);
+                MainActivity.this.startActivity(myIntent);
+            }
+        });
+
+
     }
 
     @Override
@@ -98,8 +128,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
 
 
     private boolean isReading = false; // A flag to control reading
@@ -125,11 +153,14 @@ public class MainActivity extends AppCompatActivity {
                         bytesRead = inputStream.read(buffer);
                         if (bytesRead > 0) {
                             String data = new String(buffer, 0, bytesRead);
-                            Log.d("ArduinoReading", "Received: " + data);
+                            Log.d("ArduinoReading", data);
+                            Log.d("ArduinoReading", data.trim());
+                            String[] values = data.split("\n");
 
                             // Update the TextView on the UI thread
                             runOnUiThread(() -> {
-                                textView.setText("Received: " + data);
+                                txtViewPh.setText(values[0].trim());
+                                txtViewTemp.setText(values[1].trim());
                             });
                         }
                     } catch (IOException e) {
