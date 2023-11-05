@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    tools:context=".PhValueActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -21,27 +20,28 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_margin="10dp"
                 android:background="@drawable/custom_background"
                 android:elevation="10dp"
-                android:padding="30dp"
-                android:layout_margin="10dp">
+                android:orientation="vertical"
+                android:padding="30dp">
 
                 <TextView
+                    android:id="@+id/mainval"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="pH Value: 9.1"
+                    android:layout_marginBottom="20dp"
                     android:fontFamily="@font/montserratblack"
-                    android:textSize="25dp"
+                    android:text="pH Value: 9.1"
                     android:textAlignment="center"
-                    android:layout_marginBottom="20dp"/>
+                    android:textSize="25dp" />
 
                 <Button
                     android:id="@+id/SavephButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Save pH Value"
                     android:fontFamily="@font/montserratbold"
+                    android:text="Save pH Value"
                     android:textSize="18sp" />
 
             </LinearLayout>
@@ -56,74 +56,21 @@
                 android:id="@+id/dividerTop"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
-                android:background="#4D4B4B"
-                android:layout_marginBottom="20dp" />
+                android:layout_marginBottom="20dp"
+                android:background="#4D4B4B" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="History"
-                android:fontFamily="@font/montserratblack"
-                android:textSize="20dp"
                 android:layout_marginBottom="20dp"
-                />
+                android:fontFamily="@font/montserratblack"
+                android:text="History"
+                android:textSize="20dp" />
 
-            <TableLayout
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <!--            HEADER-->
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="10dp">
-
-                    <TextView
-                        android:id="@+id/DateHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Date"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratbold"
-                        android:textSize="20dp"/>
-
-                    <TextView
-                        android:id="@+id/phValueHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="pH Value"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratbold"
-                        android:textSize="20dp"/>
-                </TableRow>
-
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="5dp">
-
-                    <TextView
-                        android:id="@+id/phDate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Oct. 19, 2023"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratsemibold"
-                        android:textSize="15sp"/>
-
-                    <TextView
-                        android:id="@+id/phValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="9.5"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratsemibold"
-                        android:textSize="15sp"/>
-                </TableRow>
-
-
-            </TableLayout>
-
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
     </ScrollView>

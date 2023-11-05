@@ -28,20 +28,21 @@
                 android:layout_margin="10dp">
 
                 <TextView
+                    android:id="@+id/mainval"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Temperature: 25.3°C"
+                    android:layout_marginBottom="20dp"
                     android:fontFamily="@font/montserratblack"
-                    android:textSize="20dp"
+                    android:text="Temperature: 25.3°C"
                     android:textAlignment="center"
-                    android:layout_marginBottom="20dp"/>
+                    android:textSize="20dp" />
 
                 <Button
                     android:id="@+id/SaveTempButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Save Temperature"
                     android:fontFamily="@font/montserratbold"
+                    android:text="Save Temperature"
                     android:textSize="18sp" />
 
             </LinearLayout>
@@ -63,61 +64,10 @@
                 android:layout_marginBottom="20dp"
                 />
 
-            <TableLayout
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <!--            HEADER-->
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="10dp">
-
-                    <TextView
-                        android:id="@+id/DateHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Date"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratbold"
-                        android:textSize="20dp"/>
-
-                    <TextView
-                        android:id="@+id/TempHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Temperature"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratbold"
-                        android:textSize="20dp"/>
-                </TableRow>
-
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="5dp">
-
-                    <TextView
-                        android:id="@+id/TempDate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Oct. 19, 2023"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratsemibold"
-                        android:textSize="15sp"/>
-
-                    <TextView
-                        android:id="@+id/TempValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="22.3°C"
-                        android:layout_weight="4"
-                        android:fontFamily="@font/montserratsemibold"
-                        android:textSize="15sp"/>
-                </TableRow>
-
-
-            </TableLayout>
+                android:layout_height="wrap_content" />
 
 
         </LinearLayout>

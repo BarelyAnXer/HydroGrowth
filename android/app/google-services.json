@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "530960110087",
+    "project_id": "hydrogrowth-420be",
+    "storage_bucket": "hydrogrowth-420be.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530960110087:android:21ba74eaec99fcd7c290a2",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRG8rQ5IARNBay2SdQvbMJ9a52TkvDrwQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

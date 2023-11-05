@@ -80,21 +80,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        Button sendButton = findViewById(R.id.sendButton);
-//
-//        sendButton.setOnClickListener(view -> {
-//            if (outputStream != null) {
-//                try {
-//                    outputStream.write("1".getBytes()); // Send "1" to Arduino
-//                    Log.d("BluetoothSend", "Sent: 1"); // Log the sent message
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    Log.d("BluetoothSend", "Error while sending: " + e.getMessage());
-//                }
-//            }
-//        });
-
-
         LinearLayout taengernest = (LinearLayout) findViewById(R.id.phValueContainer);
         LinearLayout mixnmatchernest = (LinearLayout) findViewById(R.id.temperatureContainer);
         taengernest.setOnClickListener(new View.OnClickListener() {
@@ -161,6 +146,15 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(() -> {
                                 txtViewPh.setText(values[0].trim());
                                 txtViewTemp.setText(values[1].trim());
+
+
+                                Intent phIntent = new Intent("NEW_PH_VALUE");
+                                phIntent.putExtra("ph_value", values[1].trim());
+                                sendBroadcast(phIntent);
+
+                                Intent tempIntent = new Intent("NEW_TEMP_VALUE");
+                                tempIntent.putExtra("temp_value", values[0].trim());
+                                sendBroadcast(tempIntent);
                             });
                         }
                     } catch (IOException e) {
