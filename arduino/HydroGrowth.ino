@@ -32,10 +32,15 @@ FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 int count = 0;
 bool signupOK = false;
-
 const int analogInPin = A0;
 int phSensorValue = 0;
 
+
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+const char* host = "api.pushingbox.com";
+const char* temperatureDevID = "v523C517A2545030";
+const char* waterLevelDevID = "vBEC34E21194BEA6";
 
 
 #define ONE_WIRE_BUS 4
@@ -87,6 +92,17 @@ void loop() {
   // if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
   //   sendDataPrevMillis = millis();
 
+
+
+  if (false) {
+    sendNotification(temperatureDevID);
+  } else {
+     sendNotification(waterLevelDevID);
+  }
+
+
+
+
   phSensorValue = analogRead(analogInPin);
   Serial.println("Water Level: " + String(phSensorValue));
   delay(1000);
@@ -102,7 +118,7 @@ void loop() {
   Firebase.RTDB.setString(&firebaseData, "sensorValues/farenheit", String(sensors.getTempFByIndex(0)));
   // Firebase.RTDB.setString(&firebaseData, "sensorValues/farenheit", String(sensors.getTempFByIndex(0)));
   // Firebase.RTDB.setString(&firebaseData, "sensorValues/farenheit", String(sensors.getTempFByIndex(0)));
-  
+
 
   // content.set("fields/myLatLng/geoPointValue/latitude", 1.486284);
   // content.set("fields/myLatLng/geoPointValue/longitude", 23.678198);
@@ -110,6 +126,48 @@ void loop() {
   // Firebase.Firestore.createDocument(&firebaseData, "hydrogrowth-420be", "" /* databaseId can be (default) or empty */, documentPath.c_str(), content.raw());
   // Serial.printf("ok\n%s\n\n", firebaseData.payload().c_str());
   // }
+}
+
+void sendNotification(String devid) {
+
+  Serial.print("connecting to ");
+  Serial.println(host);
+
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  const int httpPort = 80;
+  if (!client.connect(host, httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
+
+  // We now create a URI for the request
+  String url = "/pushingbox";
+  url += "?devid=";
+  url += devid;
+
+  Serial.print("Requesting URL: ");
+  Serial.println(url);
+
+  // This will send the request to the server
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+  unsigned long timeout = millis();
+  while (client.available() == 0) {
+    if (millis() - timeout > 5000) {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      return;
+    }
+  }
+
+  // Read all the lines of the reply from the server and print them to Serial
+  while (client.available()) {
+    String line = client.readStringUntil('\r');
+    Serial.print(line);
+  }
+
+  Serial.println();
+  Serial.println("closing connection");
 }
 
 float calculatepHValue(int phSensorPin) {
