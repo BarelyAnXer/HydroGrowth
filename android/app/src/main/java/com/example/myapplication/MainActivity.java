@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -10,11 +11,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity {
     private static final String[] TIPS_ARRAY = {
@@ -30,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        FirebaseApp.initializeApp(this);
+        FirebaseMessaging.getInstance().subscribeToTopic("arduino_notifications");
+
         DailyTip dailyTip = DailyTip.generateRandomTip(TIPS_ARRAY);
         showDailyTipPrompt(dailyTip);
 
@@ -37,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         TextView txtViewTemp = findViewById(R.id.textView2);
         LinearLayout openPhValue = findViewById(R.id.phValueContainer);
         LinearLayout openTemperature = findViewById(R.id.temperatureContainer);
+        Button btnImageGallery = findViewById(R.id.insertImgButton);
 
         // Initialize Firebase
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
@@ -80,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
         openTemperature.setOnClickListener(v -> {
             Intent myIntent = new Intent(MainActivity.this, TemperatureActivity.class);
             MainActivity.this.startActivity(myIntent);
+        });
+
+        btnImageGallery.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, ImageGallery.class));
         });
 
 
