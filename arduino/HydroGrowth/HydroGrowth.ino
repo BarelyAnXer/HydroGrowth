@@ -1,71 +1,70 @@
+#include <WiFi.h>
+
 #include <DallasTemperature.h>
 #include <OneWire.h>
-// temperature libraries
-
 #include <Wire.h>
 
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-
 #include <Firebase_ESP_Client.h>
-
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-// Insert your network credentials
-#define WIFI_SSID "RADIUSAD549"
-#define WIFI_PASSWORD "NL9yXrsS9G"
+const char* ssid = "Ernest";
+const char* password = "12345678";
+// const char* ssid = "RADIUSAD549";
+// #define WIFI_PASSWORD "NL9yXrsS9G"
 
-// Insert Firebase project API Key
 #define API_KEY "AIzaSyBRG8rQ5IARNBay2SdQvbMJ9a52TkvDrwQ"
-
-// Insert RTDB URLefine the RTDB URL */
 #define DATABASE_URL "https://hydrogrowth-420be-default-rtdb.firebaseio.com/"
 
-#define SensorPin A0
-
-// Define Firebase Data object
 FirebaseData firebaseData;
 FirebaseAuth auth;
 FirebaseConfig config;
-
 unsigned long sendDataPrevMillis = 0;
-int count = 0;
 bool signupOK = false;
-const int analogInPin = A0;
-int phSensorValue = 0;
-
-
-#include <WiFiClient.h>
-#include <ESP8266WebServer.h>
 const char* host = "api.pushingbox.com";
-const char* temperatureDevID = "v523C517A2545030";
-const char* waterLevelDevID = "vBEC34E21194BEA6";
+
+#define PhSensorPin 34
+#define WaterLevelSensorPin A3
+#define TdsSensorPin A0
+// const int sensorPin = A0;
+
+int waterLevelSensorValue = 0;
+
+#define VREF 5.0           // analog reference voltage(Volt) of the ADC
+#define SCOUNT 30          // sum of sample point
+int analogBuffer[SCOUNT];  // store the analog value in the array, read from ADC
+int analogBufferTemp[SCOUNT];
+int analogBufferIndex = 0;
+int copyIndex = 0;
+float averageVoltage = 0;
+float tdsValue = 0;
+
+float temperature = 25;  // current temperature for compensation
 
 
-#define ONE_WIRE_BUS 4
+#define ONE_WIRE_BUS 15
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 
-
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+
+  WiFi.begin(ssid, password);
+  Serial.println("Connecting to " + String(ssid));
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("Wi-Fi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
 
   sensors.begin();
-  pinMode(2, OUTPUT);
-
-
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(300);
-  }
-  Serial.println();
-  Serial.print("Connected with IP: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
+  pinMode(TdsSensorPin, INPUT);
 
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
@@ -84,49 +83,51 @@ void setup() {
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 }
+int count = 0;
 
 void loop() {
-  // FirebaseJson content;
-  // String documentPath = "a0/b" + String(count);
 
-  // if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
-  //   sendDataPrevMillis = millis();
-
-
-
-  if (false) {
-    sendNotification(temperatureDevID);
-  } else {
-    sendNotification(waterLevelDevID);
-  }
-
-
-
-
-  phSensorValue = analogRead(analogInPin);
-  Serial.println("Water Level: " + String(phSensorValue));
-  delay(1000);
-
-  // Start of printing the temperatures
   sensors.requestTemperatures();
   Serial.println("Celsius temperature: " + String(sensors.getTempCByIndex(0)));
   Serial.println("Fahrenheit temperature: " + String(sensors.getTempFByIndex(0)));
-  Serial.println("pH Value: " + String(calculatepHValue(SensorPin), 2));
 
-  Firebase.RTDB.setString(&firebaseData, "sensorValues/ph", String(calculatepHValue(SensorPin), 2));
+  calculateTDSValue();
+
+  waterLevelSensorValue = analogRead(WaterLevelSensorPin);
+  Serial.println("Water Level: " + String(waterLevelSensorValue));
+
+  Serial.println("pH Value: " + String(calculatepHValue(PhSensorPin), 2));
+
+  delay(1000);
+
+
+  Firebase.RTDB.setString(&firebaseData, "sensorValues/ph", String(calculatepHValue(PhSensorPin), 2));
   Firebase.RTDB.setString(&firebaseData, "sensorValues/celsius", String(sensors.getTempCByIndex(0)));
   Firebase.RTDB.setString(&firebaseData, "sensorValues/farenheit", String(sensors.getTempFByIndex(0)));
-  // Firebase.RTDB.setString(&firebaseData, "sensorValues/farenheit", String(sensors.getTempFByIndex(0)));
-  // Firebase.RTDB.setString(&firebaseData, "sensorValues/farenheit", String(sensors.getTempFByIndex(0)));
+  Firebase.RTDB.setString(&firebaseData, "sensorValues/tds", String(tdsValue));
+  Firebase.RTDB.setString(&firebaseData, "sensorValues/waterLevel", String(waterLevelSensorValue));
 
 
-  // content.set("fields/myLatLng/geoPointValue/latitude", 1.486284);
-  // content.set("fields/myLatLng/geoPointValue/longitude", 23.678198);
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
+    sendDataPrevMillis = millis();
 
-  // Firebase.Firestore.createDocument(&firebaseData, "hydrogrowth-420be", "" /* databaseId can be (default) or empty */, documentPath.c_str(), content.raw());
-  // Serial.printf("ok\n%s\n\n", firebaseData.payload().c_str());
-  // }
+
+    FirebaseJson content;
+    String documentPath = "sensorData/" + String(count);  // Modify the document path as needed
+    count++;
+
+    content.set("fields/tds/stringValue/", String(tdsValue));
+    content.set("fields/waterLevel/stringValue/", String(waterLevelSensorValue));
+    content.set("fields/fahrenheit/stringValue/", String(sensors.getTempFByIndex(0)));
+    content.set("fields/celsius/stringValue/", String(sensors.getTempCByIndex(0)));
+    content.set("fields/ph/stringValue/", String(calculatepHValue(PhSensorPin), 2));
+
+    Firebase.Firestore.createDocument(&firebaseData, "hydrogrowth-420be", "", documentPath.c_str(), content.raw());
+    Serial.printf("ok\n%s\n\n", firebaseData.payload().c_str());
+  }
 }
+
+
 
 void sendNotification(String devid) {
   WiFiClient client;
@@ -176,4 +177,58 @@ float calculatepHValue(int phSensorPin) {
 
   float phValue = (float(averageValue) * 5.0 / 1024 / 6) * 3.5;
   return phValue;
+}
+
+void calculateTDSValue() {
+  static unsigned long analogSampleTimepoint = millis();
+  if (millis() - analogSampleTimepoint > 40U) {  //every 40 milliseconds,read the analog value from the ADC
+    analogSampleTimepoint = millis();
+    analogBuffer[analogBufferIndex] = analogRead(TdsSensorPin);  //read the analog value and store into the buffer
+    analogBufferIndex++;
+    if (analogBufferIndex == SCOUNT) {
+      analogBufferIndex = 0;
+    }
+  }
+
+  static unsigned long printTimepoint = millis();
+  if (millis() - printTimepoint > 800U) {
+    printTimepoint = millis();
+    for (copyIndex = 0; copyIndex < SCOUNT; copyIndex++) {
+      analogBufferTemp[copyIndex] = analogBuffer[copyIndex];
+
+      // read the analog value more stable by the median filtering algorithm, and convert to voltage value
+      averageVoltage = getMedianNum(analogBufferTemp, SCOUNT) * (float)VREF / 4096.0;
+
+      //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
+      float compensationCoefficient = 1.0 + 0.02 * (temperature - 25.0);
+      //temperature compensation
+      float compensationVoltage = averageVoltage / compensationCoefficient;
+
+      //convert voltage value to tds value
+      tdsValue = (133.42 * compensationVoltage * compensationVoltage * compensationVoltage - 255.86 * compensationVoltage * compensationVoltage + 857.39 * compensationVoltage) * 0.5;
+      Serial.println("TDS Value: " + String(tdsValue, 2) + " ppm");
+    }
+  }
+}
+
+int getMedianNum(int bArray[], int iFilterLen) {
+  int bTab[iFilterLen];
+  for (byte i = 0; i < iFilterLen; i++)
+    bTab[i] = bArray[i];
+  int i, j, bTemp;
+  for (j = 0; j < iFilterLen - 1; j++) {
+    for (i = 0; i < iFilterLen - j - 1; i++) {
+      if (bTab[i] > bTab[i + 1]) {
+        bTemp = bTab[i];
+        bTab[i] = bTab[i + 1];
+        bTab[i + 1] = bTemp;
+      }
+    }
+  }
+  if ((iFilterLen & 1) > 0) {
+    bTemp = bTab[(iFilterLen - 1) / 2];
+  } else {
+    bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
+  }
+  return bTemp;
 }

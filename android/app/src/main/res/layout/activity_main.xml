@@ -31,23 +31,6 @@
             android:text="Real Time Monitor"
             android:textSize="31sp" />
 
-        <Button
-            android:id="@+id/connectButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/montserratbold"
-            android:text="Connect"
-            android:textSize="18sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="50dp"
-            android:fontFamily="@font/montserratsemibold"
-            android:gravity="center"
-            android:text="This will open your bluetooth and connect you to arduino."
-            android:textSize="11sp" />
-
         <View
             android:id="@+id/dividerTop"
             android:layout_width="match_parent"
@@ -161,6 +144,7 @@
             android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/g"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/montserratsemibold"
