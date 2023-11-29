@@ -21,9 +21,17 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity {
     private static final String[] TIPS_ARRAY = {
-            "Don't forget to stay hydrated!",
-            "Take breaks to stretch and move around.",
-            "Get a good night's sleep for better productivity.",
+            "Choose your desired lettuce seeds",
+            " Prepare your seedling tray and medium (Cocopeat or Sponge)",
+            "Fill your tray with cocopeat and poke a small hole for the seed.",
+            "Water your cocopeat enough to make it wet. (Do not overwater).",
+            "After 72 hours or 3 days of Germinating you will see the cotyledon (2 small leaves).",
+            "Expose them to full sunlight and start bottom watering them with half strength solution at day 7.",
+            "15 days after sowing, your lettuce are ready to transplant to the netcups.",
+            "Prepare your tuna box and water with full strength nutrient solution.",
+            "Make sure only the bottom of the netcups is submerged in the water.",
+            "Monitor them using the application for the changes in pH, temperature, water level, and nutrient solution.",
+            "Wait for 30 days after transplanting before harvesting your lettuce.",
     };
 
 
@@ -39,10 +47,14 @@ public class MainActivity extends AppCompatActivity {
         DailyTip dailyTip = DailyTip.generateRandomTip(TIPS_ARRAY);
         showDailyTipPrompt(dailyTip);
 
-        TextView txtViewPh = findViewById(R.id.textView);
+        TextView txtViewPh = findViewById(R.id.textView1);
         TextView txtViewTemp = findViewById(R.id.textView2);
-        LinearLayout openPhValue = findViewById(R.id.phValueContainer);
-        LinearLayout openTemperature = findViewById(R.id.temperatureContainer);
+        TextView txtViewWaterLevel = findViewById(R.id.textView3);
+        TextView txtViewTDS = findViewById(R.id.textView4);
+        LinearLayout openPhValue = findViewById(R.id.phcontainer);
+        LinearLayout openTemperature = findViewById(R.id.tempcontainer);
+        LinearLayout openWater = findViewById(R.id.watercontainer);
+        LinearLayout openNutrient = findViewById(R.id.nutrientcontainer);
         Button btnImageGallery = findViewById(R.id.insertImgButton);
 
         // Initialize Firebase
@@ -53,8 +65,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String phValue = dataSnapshot.getValue(String.class);
-                String concat = "ph: " + phValue;
-                txtViewPh.setText(concat);
+                txtViewPh.setText(phValue);
             }
 
             @Override
@@ -68,8 +79,33 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String tempValue = dataSnapshot.getValue(String.class);
-                String concat = "temp: " + tempValue;
-                txtViewTemp.setText(concat);
+                txtViewTDS.setText(tempValue);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+
+            }
+        });
+
+        databaseReference.child("waterLevel").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String tempValue = dataSnapshot.getValue(String.class);
+                txtViewWaterLevel.setText(tempValue);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+
+            }
+        });
+
+        databaseReference.child("celsius").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String tempValue = dataSnapshot.getValue(String.class);
+                txtViewTemp.setText(tempValue + "°C");
             }
 
             @Override
@@ -88,6 +124,17 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, TemperatureActivity.class);
             MainActivity.this.startActivity(myIntent);
         });
+
+        openNutrient.setOnClickListener(v -> {
+            Intent myIntent = new Intent(MainActivity.this, NutrientActivity.class);
+            MainActivity.this.startActivity(myIntent);
+        });
+
+        openWater.setOnClickListener(v -> {
+            Intent myIntent = new Intent(MainActivity.this, WaterActivity.class);
+            MainActivity.this.startActivity(myIntent);
+        });
+
 
         btnImageGallery.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, ImageGallery.class));

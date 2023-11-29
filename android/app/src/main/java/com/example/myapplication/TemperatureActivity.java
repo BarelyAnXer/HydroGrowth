@@ -1,123 +1,85 @@
 package com.example.myapplication;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.TextView;
+import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.CollectionReference;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 public class TemperatureActivity extends AppCompatActivity {
-    private TextView tempTextView;
+    private static final String TAG = "tempactivity";
+    private ListView listView;
+    private ArrayAdapter<String> adapter;
+    private List<String> dataList;
     private FirebaseFirestore db;
-    private CollectionReference tempValuesCollection;
-
-    private RecyclerView recyclerView;
-    private TempValueAdapter adapter;
-    private List<TempValue> tempValueList = new ArrayList<>();
-
-
-    private final BroadcastReceiver tempValueReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction() != null && intent.getAction().equals("NEW_TEMP_VALUE")) {
-                String phValue = intent.getStringExtra("temp_value");
-                tempTextView.setText(phValue);
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.temperature_value);
 
-        // Initialize Firestore
+        listView = findViewById(R.id.listView);
+        dataList = new ArrayList<>();
+        adapter = new ArrayAdapter<>(this, R.layout.list_item, R.id.textViewDate, dataList);
+        listView.setAdapter(adapter);
+
         db = FirebaseFirestore.getInstance();
-        tempValuesCollection = db.collection("tempValues");
-
-
-        recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new TempValueAdapter(tempValueList);
-        recyclerView.setAdapter(adapter);
-
-
-        tempTextView = findViewById(R.id.mainval);
-
-        Button saveTempButton = findViewById(R.id.SaveTempButton);
-
-        saveTempButton.setOnClickListener(v -> {
-            String tempValue = tempTextView.getText().toString();
-            saveToFirestore(tempValue);
-        });
-
-        displayFirestoreData();
+        loadDataFromFirestore();
     }
 
-    private void displayFirestoreData() {
-        tempValuesCollection.get().addOnSuccessListener(queryDocumentSnapshots -> {
-            tempValueList.clear(); // Clear previous data
+    private void loadDataFromFirestore() {
+        db.collection("sensorData")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<DocumentSnapshot> documents = task.getResult().getDocuments();
 
-            for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                String tempValue = documentSnapshot.getString("tempValue");
-                Date date = documentSnapshot.getDate("date");
+                            // Sort the documents by timestamp in descending order
+                            Collections.sort(documents, new Comparator<DocumentSnapshot>() {
+                                @Override
+                                public int compare(DocumentSnapshot doc1, DocumentSnapshot doc2) {
+                                    String timestamp1 = doc1.getString("timestamp");
+                                    String timestamp2 = doc2.getString("timestamp");
 
-                TempValue tempValueObj = new TempValue(tempValue, date);
-                tempValueList.add(tempValueObj);
-            }
+                                    // Convert timestamp strings to ISO 8601 format for comparison
+                                    LocalDateTime dt1 = LocalDateTime.parse(timestamp1, DateTimeFormatter.ofPattern("EEEE, MMMM dd yyyy HH:mm:ss", Locale.ENGLISH));
+                                    LocalDateTime dt2 = LocalDateTime.parse(timestamp2, DateTimeFormatter.ofPattern("EEEE, MMMM dd yyyy HH:mm:ss", Locale.ENGLISH));
 
-            adapter.notifyDataSetChanged(); // Notify the adapter that the data set has changed
-        }).addOnFailureListener(e -> {
-            // Handle any errors that may occur while fetching data
-        });
-    }
+                                    return dt2.compareTo(dt1); // Compare in descending order
+                                }
+                            });
 
-
-    private void saveToFirestore(String tempValue) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("tempValue", tempValue);
-        data.put("date", new Date());
-
-        tempValuesCollection
-                .add(data)
-                .addOnSuccessListener(documentReference -> {
-                    // Successful write to Firestore
-                    // You can add a success message or any other action here
-                })
-                .addOnFailureListener(e -> {
-                    // Handle any errors that may have occurred
+                            // Add sorted data to dataList
+                            for (DocumentSnapshot document : documents) {
+                                String date = document.getString("timestamp");
+                                String value = document.getString("celsius");
+                                dataList.add("Temperature: " + value + "°C" + "\n" + date);
+                            }
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                    }
                 });
-
-        displayFirestoreData();
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(tempValueReceiver, new IntentFilter("NEW_TEMP_VALUE"));
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(tempValueReceiver);
-    }
 }
 

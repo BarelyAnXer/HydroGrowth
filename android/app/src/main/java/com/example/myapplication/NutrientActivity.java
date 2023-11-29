@@ -7,12 +7,9 @@ import android.widget.ListView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -25,8 +22,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-public class PhValueActivity extends AppCompatActivity {
-    private static final String TAG = "phvalueactivity";
+public class NutrientActivity extends AppCompatActivity {
+    private static final String TAG = "nutrientactivity";
     private ListView listView;
     private ArrayAdapter<String> adapter;
     private List<String> dataList;
@@ -35,7 +32,7 @@ public class PhValueActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ph_value);
+        setContentView(R.layout.nutrient_value);
 
         listView = findViewById(R.id.listView);
         dataList = new ArrayList<>();
@@ -73,8 +70,8 @@ public class PhValueActivity extends AppCompatActivity {
                             // Add sorted data to dataList
                             for (DocumentSnapshot document : documents) {
                                 String date = document.getString("timestamp");
-                                String value = document.getString("ph");
-                                dataList.add("PH Value: " + value + "\n" + date);
+                                String value = document.getString("tds");
+                                dataList.add("Nutrient: " + value + "\n" + date);
                             }
                             adapter.notifyDataSetChanged();
                         } else {
@@ -85,4 +82,3 @@ public class PhValueActivity extends AppCompatActivity {
     }
 
 }
-
