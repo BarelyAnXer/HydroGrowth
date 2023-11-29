@@ -1,4 +1,6 @@
 #include <WiFi.h>
+#include "time.h"
+#include "sntp.h"
 
 #include <DallasTemperature.h>
 #include <OneWire.h>
@@ -8,8 +10,8 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-const char* ssid = "Ernest";
-const char* password = "12345678";
+const char* ssid = "HUAWEI-2.4G-3Vtx";
+const char* password = "P5hfBvTW";
 // const char* ssid = "RADIUSAD549";
 // #define WIFI_PASSWORD "NL9yXrsS9G"
 
@@ -37,7 +39,7 @@ int analogBufferTemp[SCOUNT];
 int analogBufferIndex = 0;
 int copyIndex = 0;
 float averageVoltage = 0;
-float tdsValue = 0;
+float tdsValue = 1000;
 
 float temperature = 25;  // current temperature for compensation
 
@@ -47,8 +49,28 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 
+const char* ntpServer1 = "pool.ntp.org";
+const char* ntpServer2 = "time.nist.gov";
+const long gmtOffset_sec = 28800;
+const int daylightOffset_sec = 3600;
+
+void timeavailable(struct timeval* t) {
+  Serial.println("Got time adjustment from NTP!");
+  // printLocalTime();
+}
+
+const char* waterLevelDevID = "v8976948E29AE1B7";
+const char* tempDevID = "vBED8B59DD467795";
+const char* tdsDevID = "v69C1126FAD58BEE";
+const char* phID = "v609D44A2A36FB27";
+
+
 void setup() {
   Serial.begin(115200);
+
+  sntp_set_time_sync_notification_cb(timeavailable);
+  sntp_servermode_dhcp(1);
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting to " + String(ssid));
@@ -87,6 +109,22 @@ int count = 0;
 
 void loop() {
 
+
+  if (waterLevelSensorValue < 800 && waterLevelSensorValue != 0) {
+    sendNotification(waterLevelDevID);
+  }
+
+  if (calculatepHValue(PhSensorPin) < 5.5) {
+    sendNotification(phID);
+  }
+
+  if (sensors.getTempCByIndex(0) < 18) {
+    sendNotification(tempDevID);
+  }
+
+
+
+
   sensors.requestTemperatures();
   Serial.println("Celsius temperature: " + String(sensors.getTempCByIndex(0)));
   Serial.println("Fahrenheit temperature: " + String(sensors.getTempFByIndex(0)));
@@ -108,12 +146,29 @@ void loop() {
   Firebase.RTDB.setString(&firebaseData, "sensorValues/waterLevel", String(waterLevelSensorValue));
 
 
-  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 30000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
 
+    delay(5000);
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+      Serial.println("No time available (yet)");
+      // return;
+    }
+
+    char timeString[50];                                                           // Define a character array to store the formatted time string
+    strftime(timeString, sizeof(timeString), "%A, %B %d %Y %H:%M:%S", &timeinfo);  // Convert timeinfo to a string
+
+    Serial.println(timeString);  // Print the formatted time string
+
+    char timeString2[50];
+    // strftime(timeString, sizeof(timeString), "%A%B%d%Y%H:%M:%S", &timeinfo);
+
+
+
     FirebaseJson content;
-    String documentPath = "sensorData/" + String(count);  // Modify the document path as needed
+    String documentPath = "sensorData/" + String(timeString2);  // Modify the document path as needed
     count++;
 
     content.set("fields/tds/stringValue/", String(tdsValue));
@@ -121,6 +176,7 @@ void loop() {
     content.set("fields/fahrenheit/stringValue/", String(sensors.getTempFByIndex(0)));
     content.set("fields/celsius/stringValue/", String(sensors.getTempCByIndex(0)));
     content.set("fields/ph/stringValue/", String(calculatepHValue(PhSensorPin), 2));
+    content.set("fields/timestamp/stringValue", String(timeString));
 
     Firebase.Firestore.createDocument(&firebaseData, "hydrogrowth-420be", "", documentPath.c_str(), content.raw());
     Serial.printf("ok\n%s\n\n", firebaseData.payload().c_str());
@@ -175,7 +231,7 @@ float calculatepHValue(int phSensorPin) {
     averageValue += buf[i];
   }
 
-  float phValue = (float(averageValue) * 5.0 / 1024 / 6) * 3.5;
+  float phValue = (float(averageValue) * 3.3 / 1024 / 6) * 3.5;
   return phValue;
 }
 
