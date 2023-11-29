@@ -1,75 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    android:background="@drawable/gradient_background"
+    android:orientation="vertical">
 
-    <ScrollView
+    <TextView
+        android:id="@+id/textView3"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="30dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/montserratblack"
+        android:text="History"
+        android:textSize="20sp"
+        android:textColor="@color/white"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="30dp">
+    <ListView
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/textView3"
+        android:layout_marginHorizontal="30dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/custom_background"
-                android:elevation="10dp"
-                android:padding="30dp"
-                android:layout_margin="10dp">
-
-                <TextView
-                    android:id="@+id/mainval"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
-                    android:fontFamily="@font/montserratblack"
-                    android:text="Temperature: 25.3°C"
-                    android:textAlignment="center"
-                    android:textSize="20dp" />
-
-                <Button
-                    android:id="@+id/SaveTempButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/montserratbold"
-                    android:text="Save Temperature"
-                    android:textSize="18sp" />
-
-            </LinearLayout>
-
-            <View
-                android:id="@+id/dividerTop"
-                android:layout_width="match_parent"
-                android:layout_height="3dp"
-                android:background="#4D4B4B"
-                android:layout_marginTop="50dp"
-                android:layout_marginBottom="20dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="History"
-                android:fontFamily="@font/montserratblack"
-                android:textSize="20dp"
-                android:layout_marginBottom="20dp"
-                />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-
-        </LinearLayout>
-    </ScrollView>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>

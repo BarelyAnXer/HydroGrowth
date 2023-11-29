@@ -231,7 +231,7 @@ float calculatepHValue(int phSensorPin) {
     averageValue += buf[i];
   }
 
-  float phValue = (float(averageValue) * 3.3 / 1024 / 6) * 3.5;
+  float phValue = (float(averageValue) * 3.3 / 1024 / 6);
   return phValue;
 }
 
